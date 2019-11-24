@@ -1,5 +1,5 @@
 pub mod hex {
-    pub fn encode(bytes: Vec<u8>) -> String {
+    pub fn encode(bytes: &[u8]) -> String {
         let mut out = String::new();
         for byte in bytes {
             let c1 = to_char(byte >> 4);
@@ -54,7 +54,7 @@ pub mod base64 {
                 let shift_size = curr_len - 6;
                 let val = (buf >> shift_size) as u8;
                 b64_encoding.push(to_char(val));
-                buf -= ((val as u32) << shift_size);
+                buf -= (val as u32) << shift_size;
                 curr_len -= 6;
             }
         }
@@ -129,9 +129,14 @@ pub mod base64 {
     }
 }
 
-fn vector_xor(v1: Vec<u8>, v2: Vec<u8>) -> Vec<u8> {
+fn xor(v1: &Vec<u8>, v2: &Vec<u8>) -> Vec<u8> {
     assert_eq!(v1.len(), v2.len());
-    vec!()
+
+    let mut out = Vec::new();
+    for (b1, b2) in v1.iter().zip(v2.iter()) {
+        out.push(b1 ^ b2)
+    }
+    out
 }
 
 #[cfg(test)]
@@ -164,6 +169,16 @@ mod tests {
     }
 
     #[test]
+    fn test_encode_decode_hex() {
+        use crate::hex::{decode, encode};
+
+        let inp = vec![1, 5, 4, 3];
+
+        assert_eq!(inp, decode(
+            &encode(inp.as_slice())).as_slice())
+    }
+
+    #[test]
     fn challenge_1() {
         use crate::base64::encode;
         use crate::hex::decode;
@@ -174,9 +189,13 @@ mod tests {
     #[test]
     fn challenge_2() {
         use crate::hex::{encode, decode};
+        use crate::xor;
         let inp1 = "1c0111001f010100061a024b53535009181c";
         let inp2 = "686974207468652062756c6c277320657965";
         let inp1 = decode(inp1);
         let inp2 = decode(inp2);
+
+        assert_eq!("746865206b696420646f6e277420706c6179",
+                   encode(xor(&inp1, &inp2).as_slice()));
     }
 }
