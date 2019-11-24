@@ -129,73 +129,40 @@ pub mod base64 {
     }
 }
 
-fn xor(v1: &Vec<u8>, v2: &Vec<u8>) -> Vec<u8> {
-    assert_eq!(v1.len(), v2.len());
-
-    let mut out = Vec::new();
-    for (b1, b2) in v1.iter().zip(v2.iter()) {
-        out.push(b1 ^ b2)
-    }
-    out
-}
-
 #[cfg(test)]
 mod tests {
 
+    use super::{base64, hex};
+
     #[test]
     fn test_edge() {
-        use crate::base64::encode;
         let inp = b"";
-        let out = encode(inp);
+        let out = base64::encode(inp);
         assert_eq!("", out)
     }
 
     #[test]
     fn test_encode_b64() {
-        use crate::base64::encode;
-        assert_eq!("", encode(b""));
-        assert_eq!("QQ==", encode(b"A"));
-        assert_eq!("Wg==", encode(b"Z"));
-        assert_eq!("SEVMTE8=", encode(b"HELLO"));
-        assert_eq!("SGVsbG8gV29ybGQxIFpaWg==", encode(b"Hello World1 ZZZ"));
+        assert_eq!("", base64::encode(b""));
+        assert_eq!("QQ==", base64::encode(b"A"));
+        assert_eq!("Wg==", base64::encode(b"Z"));
+        assert_eq!("SEVMTE8=", base64::encode(b"HELLO"));
+        assert_eq!("SGVsbG8gV29ybGQxIFpaWg==", base64::encode(b"Hello World1 ZZZ"));
 
     }
     #[test]
     fn test_decode_b64() {
-        use crate::base64::decode;
         let inp = "SEVMTE8=";
-        let out = decode(inp);
+        let out = base64::decode(inp);
         assert_eq!(vec![72, 69, 76, 76, 79], out)
     }
 
     #[test]
     fn test_encode_decode_hex() {
-        use crate::hex::{decode, encode};
 
         let inp = vec![1, 5, 4, 3];
 
-        assert_eq!(inp, decode(
-            &encode(inp.as_slice())).as_slice())
-    }
-
-    #[test]
-    fn challenge_1() {
-        use crate::base64::encode;
-        use crate::hex::decode;
-        let inp = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
-        assert_eq!("SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t", encode(decode(inp).as_slice()))
-    }
-
-    #[test]
-    fn challenge_2() {
-        use crate::hex::{encode, decode};
-        use crate::xor;
-        let inp1 = "1c0111001f010100061a024b53535009181c";
-        let inp2 = "686974207468652062756c6c277320657965";
-        let inp1 = decode(inp1);
-        let inp2 = decode(inp2);
-
-        assert_eq!("746865206b696420646f6e277420706c6179",
-                   encode(xor(&inp1, &inp2).as_slice()));
+        assert_eq!(inp, hex::decode(
+            &hex::encode(inp.as_slice())).as_slice())
     }
 }
