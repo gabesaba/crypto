@@ -1,19 +1,39 @@
 pub mod hex {
     pub fn encode(bytes: Vec<u8>) -> String {
-        String::new()
+        let mut out = String::new();
+        for byte in bytes {
+            let c1 = to_char(byte >> 4);
+            let c2 = to_char(byte & 0b1111);
+            out.push(c1);
+            out.push(c2);
+        }
+        out
     }
 
     pub fn decode(hex_str: &str) -> Vec<u8> {
-        vec![]
+        let mut out = Vec::new();
+        for (c1, c2) in hex_str.chars().step_by(2)
+            .zip(hex_str.chars().skip(1).step_by(2)) {
+            let mut byte = 0;
+            byte += from_char(c1) << 4;
+            byte += from_char(c2);
+            out.push(byte)
+        }
+        out
     }
+
     fn to_char(byte: u8) -> char {
-        'a'
+        match byte {
+            0..=9 => char::from('0' as u8 + byte),
+            10..=15 => char::from('a' as u8 + byte - 10),
+            _ => panic!("Invalid input {}", byte)
+        }
     }
 
     fn from_char(c: char) -> u8 {
         match c {
             '0'..='9' => c as u8 - ('0' as u8),
-            'A'..='F' => c as u8 - ('A' as u8),
+            'a'..='f' => c as u8 - ('a' as u8) + 10,
             _ => panic!("Char {} is not in Hex alphabet", c)
         }
     }
@@ -109,24 +129,31 @@ pub mod base64 {
     }
 }
 
+fn vector_xor(v1: Vec<u8>, v2: Vec<u8>) -> Vec<u8> {
+    assert_eq!(v1.len(), v2.len());
+    vec!()
+}
 
 #[cfg(test)]
 mod tests {
 
     #[test]
-    fn test_encode_b64() {
+    fn test_edge() {
         use crate::base64::encode;
-        let inp = b"HELLO";
+        let inp = b"";
         let out = encode(inp);
-        assert_eq!("SEVMTE8=", out)
+        assert_eq!("", out)
     }
 
     #[test]
-    fn test_encode_b642() {
+    fn test_encode_b64() {
         use crate::base64::encode;
-        let inp = b"Hello World1";
-        let out = encode(inp);
-        assert_eq!("SGVsbG8gV29ybGQx", out)
+        assert_eq!("", encode(b""));
+        assert_eq!("QQ==", encode(b"A"));
+        assert_eq!("Wg==", encode(b"Z"));
+        assert_eq!("SEVMTE8=", encode(b"HELLO"));
+        assert_eq!("SGVsbG8gV29ybGQxIFpaWg==", encode(b"Hello World1 ZZZ"));
+
     }
     #[test]
     fn test_decode_b64() {
@@ -134,5 +161,22 @@ mod tests {
         let inp = "SEVMTE8=";
         let out = decode(inp);
         assert_eq!(vec![72, 69, 76, 76, 79], out)
+    }
+
+    #[test]
+    fn challenge_1() {
+        use crate::base64::encode;
+        use crate::hex::decode;
+        let inp = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
+        assert_eq!("SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t", encode(decode(inp).as_slice()))
+    }
+
+    #[test]
+    fn challenge_2() {
+        use crate::hex::{encode, decode};
+        let inp1 = "1c0111001f010100061a024b53535009181c";
+        let inp2 = "686974207468652062756c6c277320657965";
+        let inp1 = decode(inp1);
+        let inp2 = decode(inp2);
     }
 }
