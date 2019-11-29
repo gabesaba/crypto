@@ -10,10 +10,10 @@ pub mod hex {
         out
     }
 
-    pub fn decode(hex_str: &str) -> Vec<u8> {
+    pub fn decode(s: &str) -> Vec<u8> {
         let mut out = Vec::new();
-        for (c1, c2) in hex_str.chars().step_by(2)
-            .zip(hex_str.chars().skip(1).step_by(2)) {
+        for (c1, c2) in s.chars().step_by(2)
+            .zip(s.chars().skip(1).step_by(2)) {
             let mut byte = 0;
             byte += from_char(c1) << 4;
             byte += from_char(c2);
@@ -80,12 +80,12 @@ pub mod base64 {
         b64_encoding
     }
 
-    pub fn decode(b64_str: &str) -> Vec<u8> {
+    pub fn decode(s: &str) -> Vec<u8> {
         let mut out = Vec::new();
 
         let mut curr_len = 0;
         let mut buf: u32 = 0;
-        for c in b64_str.chars() {
+        for c in s.chars() {
             if let '=' = c {} else {
                 let enc = from_char(c);
                 buf <<= 6;
@@ -125,6 +125,24 @@ pub mod base64 {
             '/' => 63,
             _ => panic!()
         }
+    }
+}
+
+pub mod plaintext {
+    pub fn encode(bytes: &[u8]) -> String {
+        let mut res = String::new();
+        for byte in bytes {
+            res.push(char::from(*byte));
+        }
+        res
+    }
+
+    pub fn decode(s: &str) -> Vec<u8> {
+        let mut res = Vec::new();
+        for c in s.chars() {
+            res.push(c as u8)
+        }
+        res
     }
 }
 
