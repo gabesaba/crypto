@@ -40,18 +40,16 @@ mod tests {
     #[test]
     fn challenge_4() {
         use crate::crypto::bytes::hex::decode;
-        use crate::crypto::util::{decode_single_char_xor, read_lines};
+        use crate::crypto::util::{decode_single_char_xor, load_challenge_data};
 
         let mut best_ct = 0;
         let mut best_line = String::new();
-        for line in read_lines("data/set_1/4.txt") {
-            if let Ok(l) = line {
-                let bytes = decode(&l);
-                let (as_str, ct) = decode_single_char_xor(&bytes);
-                if ct > best_ct {
-                    best_ct = ct;
-                    best_line = as_str;
-                }
+        for line in load_challenge_data("4").split("\n") {
+            let bytes = decode(line);
+            let (as_str, ct) = decode_single_char_xor(&bytes);
+            if ct > best_ct {
+                best_ct = ct;
+                best_line = as_str;
             }
         }
         assert_eq!("Now that the party is jumping\n", best_line)
