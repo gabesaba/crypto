@@ -102,7 +102,6 @@ pub mod base64 {
                 curr_len -= 8;
             }
         }
-        println!("Curr len {}", curr_len);
         return out;
     }
 

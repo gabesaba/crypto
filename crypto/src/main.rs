@@ -26,24 +26,34 @@ mod tests {
 
     #[test]
     fn challenge_3() {
-        use crate::crypto::cypher::char_xor;
         use crate::crypto::bytes::hex;
         use crate::crypto::util;
 
         let hex_str = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
 
         let bytes = hex::decode(hex_str);
-        let mut best_ct = 0;
-        let mut best= "".to_owned();
 
-        for i in 0..255 {
-            let as_str = util::to_str(&char_xor(&bytes, i));
-            let ct = util::alpha_ct(&as_str);
-            if ct > best_ct {
-                best_ct = ct;
-                best = as_str;
+        let best = util::decode_single_char_xor(&bytes).0;
+        assert_eq!("Cooking MC\'s like a pound of bacon", best);
+    }
+
+    #[test]
+    fn challenge_4() {
+        use crate::crypto::bytes::hex::decode;
+        use crate::crypto::util::{decode_single_char_xor, read_lines};
+
+        let mut best_ct = 0;
+        let mut best_line = String::new();
+        for line in read_lines("data/set_1/4.txt") {
+            if let Ok(l) = line {
+                let bytes = decode(&l);
+                let (as_str, ct) = decode_single_char_xor(&bytes);
+                if ct > best_ct {
+                    best_ct = ct;
+                    best_line = as_str;
+                }
             }
         }
-        assert_eq!("Cooking MC\'s like a pound of bacon", best);
+        assert_eq!("Now that the party is jumping\n", best_line)
     }
 }
