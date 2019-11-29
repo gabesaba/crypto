@@ -37,3 +37,27 @@ pub fn decode_single_char_xor(inp: &Vec<u8>) -> (String, usize){
     }
     (best, best_score)
 }
+
+fn char_dist(c1: char, c2: char) -> u32 {
+    let mismatching_bits = (c1 as u8) ^ (c2 as u8);
+
+    // Could use u8.count_ones(), but since I'm a Rust newbie,
+    // I'm biasing towards writing everything myself.
+    let mut dist = 0;
+    for shift in 0..8 {
+        if mismatching_bits >> shift & 1 == 1 {
+            dist += 1
+        }
+    }
+    dist
+}
+
+pub fn hamming_distance(s1: &str, s2: &str) -> u32 {
+    assert_eq!(s1.len(), s2.len());
+
+    let mut dist = 0;
+    for (c1, c2) in s1.chars().zip(s2.chars()) {
+        dist += char_dist(c1, c2)
+    }
+    dist
+}
