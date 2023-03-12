@@ -84,21 +84,19 @@ pub mod base64 {
         let mut out = Vec::new();
 
         let mut curr_len = 0;
-        let mut buf: u32 = 0;
+        let mut buf: u16 = 0;
         for c in s.chars() {
-            if let '=' = c {} else {
+            if c != '=' {
                 let enc = from_char(c);
                 buf <<= 6;
-                buf += u32::from(enc);
+                buf += u16::from(enc);
                 curr_len += 6;
-
             }
 
             if curr_len >= 8 {
                 let shift_size = curr_len - 8;
-                let val = (buf >> shift_size) as u8;
+                let val = ((buf >> shift_size) & 0xFF) as u8;
                 out.push(val);
-                buf >>= 8;
                 curr_len -= 8;
             }
         }
@@ -181,5 +179,13 @@ mod tests {
 
         assert_eq!(inp, hex::decode(
             &hex::encode(inp.as_slice())).as_slice())
+    }
+
+    #[test]
+    fn test_decode_encode_base64() {
+        use crate::crypto::bytes::base64;
+        let my_base64 = "OgsM";
+        let encoded_and_decoded = base64::encode(&base64::decode(my_base64));
+        assert_eq!(my_base64, encoded_and_decoded);
     }
 }
