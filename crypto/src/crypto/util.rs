@@ -24,16 +24,16 @@ pub fn load_challenge_data(challenge: &str) -> String {
 
 // Returns the result of a char_xor that's
 // most likely to be English, as well as its score
-pub fn decode_single_char_xor(inp: &Vec<u8>) -> (String, usize){
+pub fn decode_single_char_xor(inp: &Vec<u8>) -> (Vec<u8>, u32){
     let mut best_score = 0;
-    let mut best = String::new();
+    let mut best = Vec::new();
     for i in 0..255 {
-            let as_str = to_str(&char_xor(&inp, i));
-            let score = english_score(&as_str);
-            if score > best_score {
-                best_score = score;
-                best = as_str;
-            }
+        let decrypted = char_xor(&inp, i);
+        let score = english_score(&decrypted);
+        if score > best_score {
+            best_score = score;
+            best = decrypted;
+        }
     }
     (best, best_score)
 }

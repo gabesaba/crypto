@@ -1,7 +1,12 @@
+use crate::crypto::bytes::plaintext;
+use crate::crypto::cypher::{char_xor, repeating_key_xor};
+use crate::crypto::util::decode_single_char_xor;
+
 mod crypto;
 
 #[cfg(test)]
 mod tests {
+    use crate::crypto::bytes::hex::encode;
 
     #[test]
     fn challenge_1() {
@@ -26,30 +31,31 @@ mod tests {
 
     #[test]
     fn challenge_3() {
-        use crate::crypto::bytes::hex;
+        use crate::crypto::bytes::{hex, plaintext};
         use crate::crypto::util;
 
         let hex_str = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
 
         let bytes = hex::decode(hex_str);
 
-        let best = util::decode_single_char_xor(&bytes).0;
+        let best = plaintext::encode(&util::decode_single_char_xor(&bytes).0);
         assert_eq!("Cooking MC\'s like a pound of bacon", best);
     }
 
     #[test]
     fn challenge_4() {
-        use crate::crypto::bytes::hex::decode;
+        use crate::crypto::bytes::hex;
+        use crate::crypto::bytes::plaintext;
         use crate::crypto::util::{decode_single_char_xor, load_challenge_data};
 
         let mut best_ct = 0;
         let mut best_line = String::new();
         for line in load_challenge_data("4").split("\n") {
-            let bytes = decode(line);
-            let (as_str, ct) = decode_single_char_xor(&bytes);
+            let bytes = hex::decode(line);
+            let (decoded_bytes, ct) = decode_single_char_xor(&bytes);
             if ct > best_ct {
                 best_ct = ct;
-                best_line = as_str;
+                best_line = plaintext::encode(&decoded_bytes);
             }
         }
         assert_eq!("Now that the party is jumping\n", best_line)
@@ -79,3 +85,5 @@ I go crazy when I hear a cymbal");
         assert_eq!(37, res);
     }
 }
+
+fn main() {}
