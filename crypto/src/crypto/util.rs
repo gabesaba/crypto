@@ -4,6 +4,23 @@ use std::path::Path;
 use crate::crypto::cypher::char_xor;
 use crate::crypto::english::english_score;
 
+#[cfg(test)]
+mod tests {
+    use crate::crypto::bytes::plaintext;
+
+    #[test]
+    fn test_hamming_distance() {
+        use crate::crypto::bytes::plaintext;
+        use crate::crypto::util::hamming_distance;
+
+        let s1 = &plaintext::decode("this is a test");
+        let s2 = &plaintext::decode("wokka wokka!!!");
+        let res = hamming_distance(s1, s2);
+
+        assert_eq!(37, res);
+    }
+}
+
 pub fn to_str(inp: &Vec<u8>) -> String {
     let mut out = String::new();
     for byte in inp {
@@ -22,24 +39,8 @@ pub fn load_challenge_data(challenge: &str) -> String {
     buf
 }
 
-// Returns the result of a char_xor that's
-// most likely to be English, as well as its score
-pub fn decode_single_char_xor(inp: &Vec<u8>) -> (Vec<u8>, u32){
-    let mut best_score = 0;
-    let mut best = Vec::new();
-    for i in 0..255 {
-        let decrypted = char_xor(&inp, i);
-        let score = english_score(&decrypted);
-        if score > best_score {
-            best_score = score;
-            best = decrypted;
-        }
-    }
-    (best, best_score)
-}
-
-fn char_dist(c1: char, c2: char) -> u32 {
-    let mismatching_bits = (c1 as u8) ^ (c2 as u8);
+fn char_dist(c1: u8, c2: u8) -> u32 {
+    let mismatching_bits = c1 ^ c2;
 
     // Could use u8.count_ones(), but since I'm a Rust newbie,
     // I'm biasing towards writing everything myself.
@@ -52,12 +53,12 @@ fn char_dist(c1: char, c2: char) -> u32 {
     dist
 }
 
-pub fn hamming_distance(s1: &str, s2: &str) -> u32 {
+pub fn hamming_distance(s1: &[u8], s2: &[u8]) -> u32 {
     assert_eq!(s1.len(), s2.len());
 
     let mut dist = 0;
-    for (c1, c2) in s1.chars().zip(s2.chars()) {
-        dist += char_dist(c1, c2)
+    for (c1, c2) in s1.iter().zip(s2) {
+        dist += char_dist(*c1, *c2)
     }
     dist
 }

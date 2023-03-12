@@ -8,16 +8,16 @@ fn xor<'a, A, B>(i1: A, i2: B) -> Vec<u8>
     out
 }
 
-pub fn vec_xor(v1: &Vec<u8>, v2: &Vec<u8>) -> Vec<u8> {
+pub fn vec_xor(v1: &[u8], v2: &[u8]) -> Vec<u8> {
     xor(v1.iter(), v2.iter())
 }
 
-pub fn char_xor(v1: &Vec<u8>, char: u8) -> Vec<u8> {
+pub fn char_xor(v1: &[u8], char: u8) -> Vec<u8> {
     use std::iter::repeat;
     xor(v1.iter(), repeat(&char).into_iter())
 }
 
-pub fn repeating_key_xor(v1: &Vec<u8>, key: &Vec<u8>) -> Vec<u8> {
+pub fn repeating_key_xor(v1: &[u8], key: &[u8]) -> Vec<u8> {
     xor(v1.iter(), key.iter().cycle())
 }
 

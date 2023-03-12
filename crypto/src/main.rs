@@ -1,12 +1,12 @@
 use crate::crypto::bytes::plaintext;
 use crate::crypto::cypher::{char_xor, repeating_key_xor};
-use crate::crypto::util::decode_single_char_xor;
 
 mod crypto;
 
 #[cfg(test)]
 mod tests {
     use crate::crypto::bytes::hex::encode;
+    use crate::crypto::cypher::{char_xor, repeating_key_xor};
 
     #[test]
     fn challenge_1() {
@@ -32,29 +32,35 @@ mod tests {
     #[test]
     fn challenge_3() {
         use crate::crypto::bytes::{hex, plaintext};
-        use crate::crypto::util;
+        use crate::crypto::crack::decode_single_char_xor;
 
         let hex_str = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
 
         let bytes = hex::decode(hex_str);
 
-        let best = plaintext::encode(&util::decode_single_char_xor(&bytes).0);
-        assert_eq!("Cooking MC\'s like a pound of bacon", best);
+        let key = decode_single_char_xor(&bytes);
+        let result = plaintext::encode(&char_xor(&bytes, key));
+
+        assert_eq!("Cooking MC\'s like a pound of bacon", result);
     }
 
     #[test]
     fn challenge_4() {
         use crate::crypto::bytes::hex;
         use crate::crypto::bytes::plaintext;
-        use crate::crypto::util::{decode_single_char_xor, load_challenge_data};
+        use crate::crypto::util::load_challenge_data;
+        use crate::crypto::crack::decode_single_char_xor;
+        use crate::crypto::english::english_score;
 
-        let mut best_ct = 0;
+        let mut best_score = 0.0;
         let mut best_line = String::new();
         for line in load_challenge_data("4").split("\n") {
             let bytes = hex::decode(line);
-            let (decoded_bytes, ct) = decode_single_char_xor(&bytes);
-            if ct > best_ct {
-                best_ct = ct;
+            let key = decode_single_char_xor(&bytes);
+            let decoded_bytes = char_xor(&bytes, key);
+            let score = english_score(&decoded_bytes);
+            if score > best_score {
+                best_score = score;
                 best_line = plaintext::encode(&decoded_bytes);
             }
         }
@@ -76,14 +82,23 @@ I go crazy when I hear a cymbal");
     }
 
     #[test]
-    fn test_hamming_distance() {
-        use crate::crypto::util::hamming_distance;
-        let s1 = "this is a test";
-        let s2 = "wokka wokka!!!";
-        let res = hamming_distance(s1, s2);
+    fn challenge_6() {
+        use crate::crypto::bytes::{base64, plaintext};
+        use crate::crypto::crack::break_repeating_key_xor;
+        use crate::crypto::util::load_challenge_data;
 
-        assert_eq!(37, res);
+        let mut bytes = Vec::new();
+        for line in load_challenge_data("6").split("\n") {
+            for byte in base64::decode(line) {
+                bytes.push(byte);
+            }
+        }
+        let key = break_repeating_key_xor(&bytes);
+        let output = plaintext::encode(&repeating_key_xor(&bytes, &key));
+
+        assert_eq!("I'm back and I'm ringin' the bell", &output[0..33]);
     }
 }
+
 
 fn main() {}
