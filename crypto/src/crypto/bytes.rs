@@ -68,12 +68,10 @@ pub mod base64 {
 
             // 8 bit final quantum
             if curr_len == 2 {
-
                 b64_encoding.push_str("==");
             }
             // 16 bit final quantum
             else if curr_len == 4 {
-
                 b64_encoding.push('=');
             }
         }
@@ -146,7 +144,6 @@ pub mod plaintext {
 
 #[cfg(test)]
 mod tests {
-
     use super::{base64, hex};
 
     #[test]
@@ -163,8 +160,8 @@ mod tests {
         assert_eq!("Wg==", base64::encode(b"Z"));
         assert_eq!("SEVMTE8=", base64::encode(b"HELLO"));
         assert_eq!("SGVsbG8gV29ybGQxIFpaWg==", base64::encode(b"Hello World1 ZZZ"));
-
     }
+
     #[test]
     fn test_decode_b64() {
         let inp = "SEVMTE8=";
@@ -174,11 +171,10 @@ mod tests {
 
     #[test]
     fn test_encode_decode_hex() {
-
         let inp = vec![1, 5, 4, 3];
 
-        assert_eq!(inp, hex::decode(
-            &hex::encode(inp.as_slice())).as_slice())
+        assert_eq!(inp, hex::decode(&
+            &hex::encode(&inp)));
     }
 
     #[test]

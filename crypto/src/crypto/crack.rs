@@ -1,12 +1,9 @@
-use crate::crypto::bytes::plaintext;
-use crate::crypto::util::{hamming_distance};
+use crate::crypto::score::{english_score, hamming_distance};
 use crate::crypto::cypher::{char_xor, repeating_key_xor};
-use crate::crypto::english::english_score;
 
 fn get_key_sizes(bytes: &[u8]) -> Vec<(f64, usize)> {
     let mut minimum_distance = f64::MAX;
     let num_trials = 10;
-    let mut best_key_size = 0;
     let mut scores = Vec::new();
 
     for key_size in 2..40 {
@@ -38,7 +35,6 @@ fn get_key_sizes(bytes: &[u8]) -> Vec<(f64, usize)> {
         distance /= key_size as f64; // normalize by key size
         if distance < minimum_distance {
             minimum_distance = distance;
-            best_key_size = key_size
         }
         scores.push((distance, key_size))
     }
@@ -82,7 +78,7 @@ pub fn break_repeating_key_xor(bytes: &[u8]) -> Vec<u8> {
 
     // try the 5 best key-lengths.
     for i in 0..5 {
-        let (score, key_size) = key_sizes[i];
+        let (_, key_size) = key_sizes[i];
         let transposed = transpose(bytes, key_size);
         let mut key = Vec::new();
         for block in transposed {

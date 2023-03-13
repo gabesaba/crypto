@@ -1,11 +1,7 @@
-use crate::crypto::bytes::plaintext;
-use crate::crypto::cypher::{char_xor, repeating_key_xor};
-
 mod crypto;
 
 #[cfg(test)]
 mod tests {
-    use crate::crypto::bytes::hex::encode;
     use crate::crypto::cypher::{char_xor, repeating_key_xor};
 
     #[test]
@@ -50,7 +46,7 @@ mod tests {
         use crate::crypto::bytes::plaintext;
         use crate::crypto::util::load_challenge_data;
         use crate::crypto::crack::decode_single_char_xor;
-        use crate::crypto::english::english_score;
+        use crate::crypto::score::english_score;
 
         let mut best_score = 0.0;
         let mut best_line = String::new();
