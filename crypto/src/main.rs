@@ -50,8 +50,8 @@ mod tests {
 
         let mut best_score = 0.0;
         let mut best_line = String::new();
-        for line in load_challenge_data("4").split("\n") {
-            let bytes = hex::decode(line);
+        for line in load_challenge_data("4") {
+            let bytes = hex::decode(&line);
             let key = decode_single_char_xor(&bytes);
             let decoded_bytes = char_xor(&bytes, key);
             let score = english_score(&decoded_bytes);
@@ -84,8 +84,8 @@ I go crazy when I hear a cymbal");
         use crate::crypto::util::load_challenge_data;
 
         let mut bytes = Vec::new();
-        for line in load_challenge_data("6").split("\n") {
-            for byte in base64::decode(line) {
+        for line in load_challenge_data("6") {
+            for byte in base64::decode(&line) {
                 bytes.push(byte);
             }
         }
@@ -93,6 +93,32 @@ I go crazy when I hear a cymbal");
         let output = plaintext::encode(&repeating_key_xor(&bytes, &key));
 
         assert_eq!("I'm back and I'm ringin' the bell", &output[0..33]);
+    }
+
+    #[test]
+    fn challenge_7() {
+        use crate::crypto::util::load_challenge_data;
+        use crate::crypto::bytes::{base64, plaintext};
+        use openssl::symm::{Cipher, decrypt};
+
+        let mut bytes = Vec::new();
+        for line in load_challenge_data("7") {
+            for byte in base64::decode(&line) {
+                bytes.push(byte);
+            }
+        }
+
+        let cipher = Cipher::aes_128_ecb();
+        let data = &bytes;
+        let key = plaintext::decode("YELLOW SUBMARINE");
+
+        let text = plaintext::encode(&decrypt(
+            cipher,
+            &key,
+            None,
+            data).unwrap());
+
+        assert_eq!("I'm back and I'm ringin' the bell", &text[0..33]);
     }
 }
 
