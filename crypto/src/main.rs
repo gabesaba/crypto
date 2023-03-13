@@ -3,6 +3,7 @@ mod crypto;
 #[cfg(test)]
 mod tests {
     use crate::crypto::cypher::{char_xor, repeating_key_xor};
+    use crate::crypto::util::load_challenge_data;
 
     #[test]
     fn challenge_1() {
@@ -44,7 +45,6 @@ mod tests {
     fn challenge_4() {
         use crate::crypto::bytes::hex;
         use crate::crypto::bytes::plaintext;
-        use crate::crypto::util::load_challenge_data;
         use crate::crypto::crack::decode_single_char_xor;
         use crate::crypto::score::english_score;
 
@@ -81,7 +81,6 @@ I go crazy when I hear a cymbal");
     fn challenge_6() {
         use crate::crypto::bytes::{base64, plaintext};
         use crate::crypto::crack::break_repeating_key_xor;
-        use crate::crypto::util::load_challenge_data;
 
         let mut bytes = Vec::new();
         for line in load_challenge_data("6") {
@@ -97,7 +96,6 @@ I go crazy when I hear a cymbal");
 
     #[test]
     fn challenge_7() {
-        use crate::crypto::util::load_challenge_data;
         use crate::crypto::bytes::{base64, plaintext};
         use openssl::symm::{Cipher, decrypt};
 
@@ -120,7 +118,32 @@ I go crazy when I hear a cymbal");
 
         assert_eq!("I'm back and I'm ringin' the bell", &text[0..33]);
     }
-}
 
+    #[test]
+    fn challenge_8() {
+        use crate::crypto::crack::aes_ecb_has_duplicate;
+        use crate::crypto::bytes::plaintext;
+        let lines = load_challenge_data("8");
+
+        let mut matching_line = Vec::new();
+        for line in lines {
+            let bytes = plaintext::decode(&line);
+            if aes_ecb_has_duplicate(&bytes) {
+                matching_line = bytes;
+            }
+        }
+
+        assert_eq!([100, 56, 56, 48, 54, 49, 57, 55, 52, 48, 97, 56, 97, 49, 57, 98],
+                   matching_line[0..16]);
+
+        let yellow_sub = "yellow submarine";
+        let duplicated = plaintext::decode(&format!("{}{}", yellow_sub, yellow_sub));
+        assert!(aes_ecb_has_duplicate(&duplicated));
+
+        let mellow_sub = "mellow submarine";
+        let different = plaintext::decode(&format!("{}{}", yellow_sub, mellow_sub));
+        assert!(!aes_ecb_has_duplicate(&different));
+    }
+}
 
 fn main() {}

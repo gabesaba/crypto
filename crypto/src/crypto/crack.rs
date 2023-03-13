@@ -1,38 +1,46 @@
+use std::collections::HashSet;
 use crate::crypto::score::{english_score, hamming_distance};
 use crate::crypto::cypher::{char_xor, repeating_key_xor};
 
+fn get_hamming_distance_for_segments(bytes: &[u8], key_size: usize, num_trials: usize) -> f64 {
+    let mut distance = 0.0;
+    let mut num_trials_completed: usize = 0;
+    for trial in (0..num_trials * 2).step_by(2) {
+        let lower = trial * key_size;
+        let mid = (trial + 1) * key_size;
+        let upper = (trial + 2) * key_size;
+
+        // Make sure we didn't walk off the end of the array.
+        if upper > bytes.len() {
+            println!("Breaking!!!");
+            break;
+        }
+
+        let slice1 = &bytes[lower..mid];
+        let slice2 = &bytes[mid..upper];
+        distance += hamming_distance(slice1, slice2) as f64;
+        num_trials_completed += 1;
+    }
+
+    // Don't add key if we weren't able to score it. Also, since subsequent keys will be greater,
+    // we can simply break.
+    if num_trials_completed == 0 {
+        return f64::MAX;
+    }
+
+    distance /= num_trials_completed as f64; // normalize by num trials.
+    return distance;
+}
+
 fn get_key_sizes(bytes: &[u8]) -> Vec<(f64, usize)> {
     let mut minimum_distance = f64::MAX;
-    let num_trials = 10;
     let mut scores = Vec::new();
 
     for key_size in 2..40 {
         let mut distance = 0.0;
-        let mut num_trials_completed: usize = 0;
-        for trial in (0..num_trials * 2).step_by(2) {
-            let lower = trial * key_size;
-            let mid = (trial + 1) * key_size;
-            let upper = (trial + 2) * key_size;
+        distance += get_hamming_distance_for_segments(bytes, key_size, 10);
+        distance /= key_size as f64; // normalize by key size.
 
-            // Make sure we didn't walk off the end of the array.
-            if upper > bytes.len() {
-                break;
-            }
-
-            let slice1 = &bytes[lower..mid];
-            let slice2 = &bytes[mid..upper];
-            distance += hamming_distance(slice1, slice2) as f64;
-            num_trials_completed += 1;
-        }
-
-        // Don't add key if we weren't able to score it. Also, since subsequent keys will be greater,
-        // we can simply break.
-        if num_trials_completed == 0 {
-            break;
-        }
-
-        distance /= num_trials_completed as f64; // normalize by num trails
-        distance /= key_size as f64; // normalize by key size
         if distance < minimum_distance {
             minimum_distance = distance;
         }
@@ -93,4 +101,29 @@ pub fn break_repeating_key_xor(bytes: &[u8]) -> Vec<u8> {
         }
     }
     return best_key;
+}
+
+// Determine if there is a duplicate 16-byte segment in encrypted aes-ecb bytes.
+pub fn aes_ecb_has_duplicate(bytes: &[u8]) -> bool {
+    let mut duplicate = HashSet::new();
+
+    let mut key: u128 = 0;
+    let mut curr_size = 0;
+    for byte in bytes {
+        key += *byte as u128;
+        curr_size += 8;
+
+        if curr_size < 128 {
+            key <<= 8;
+            continue;
+        }
+
+        if duplicate.contains(&key) {
+            return true;
+        }
+        duplicate.insert(key);
+        key = 0;
+        curr_size = 0;
+    }
+    return false;
 }
